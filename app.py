@@ -21,22 +21,16 @@ df = pd.DataFrame(data)
 with open('tfidf_vectorizer_model.pkl', 'rb') as f:
     vectorizer = pickle.load(f)
 
- 
-@app.route('/', methods=['GET'])
-def get_home():
-    return 'hi said'
-
-@app.route('/a', methods=['GET'])
-def get_home2():
-    return 'hi said mbisd'
-   
-
- 
+@app.route('/')
+def home():
+    return render_template('index.html')
 
 @app.route('/api/v1/get_similarity', methods=['POST'])
 
 def get_similarity():
     # fun = get_top_k_unique_similar_problems()
+    df['solution'] = df['solution'].fillna('')
+
     req_data = request.get_json()
     input_text = req_data['input_text']
 
@@ -50,6 +44,8 @@ def get_similarity():
     top_5_indices = cosine_similarities.argsort()[-10:][::-1]
     top_5_problems = df.iloc[top_5_indices]['problem'].values
     top_5_solutions = df.iloc[top_5_indices]['solution'].values
+    top_5_extension_resolu = df.iloc[top_5_indices]['extension_number'].values
+
     top_5_similarities = cosine_similarities[top_5_indices]
    
     top_k_indices = cosine_similarities.argsort()[::-1]  # sort indices in descending order of similarity
@@ -74,27 +70,12 @@ def get_similarity():
         'top_5_problems_similarities': top_5_similarities .tolist(),
         'top_5_extension_number': unique_extensions  ,
         'top_5_solutions':top_5_solutions.tolist(),
-        'top_5_extension_number_similarities': unique_similarities   
+        'top_5_extension_number_similarities': unique_similarities   ,
+        'top_5_extension_resolu':top_5_extension_resolu.tolist(),
     }
 
     return jsonify(response)
 
-     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 if __name__ == '__main__':
     app.run(debug=True)
+      
