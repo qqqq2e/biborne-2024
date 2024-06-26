@@ -31,7 +31,7 @@ export-env {
     }
 
     let is_windows = ($nu.os-info.name | str downcase) == 'windows'
-    let virtual_env = '/Users/said/filter_cv'
+    let virtual_env = '/Users/filter_cv11'
     let bin = 'bin'
     let path_sep = (char esep)
     let path_name = (if $is_windows {

@@ -1,14 +1,13 @@
  
 
  
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from flask import Flask, render_template, request, jsonify  
+from flask import Flask, request, jsonify  
  
  
 import pandas as pd
 import pickle
-# typing-extensions>=4.6.1
+ 
 app = Flask(__name__)
 
  
@@ -34,7 +33,7 @@ def get_home2():
 
  
 
-@app.route('/api/get_similarity', methods=['POST'])
+@app.route('/api/v1/get_similarity', methods=['POST'])
 
 def get_similarity():
     # fun = get_top_k_unique_similar_problems()
@@ -80,7 +79,7 @@ def get_similarity():
 
     return jsonify(response)
 
-    
+     
 
 
 

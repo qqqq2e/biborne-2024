@@ -16,7 +16,7 @@
         function getSimilarProblems() {
             var inputText = document.getElementById('inputText').value;
 
-            axios.post('/api/get_similarity', {
+            axios.post('/api/v1/get_similarity', {
                 input_text: inputText
             })
             .then(function (response) {
