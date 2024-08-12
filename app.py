@@ -8,7 +8,9 @@ from flask import Flask, request, jsonify
  
 import pandas as pd
 import pickle
+import assemblyai as aai
  
+
 app = Flask(__name__)
  
  
@@ -46,7 +48,102 @@ with open('tfidf_vectorizer_model.pkl', 'rb') as f:
 def home():
 
     return render_template('index.html')
+# Replace with your AssemblyAI API key
+aai.settings.api_key = "9d3a5b1f02ad41cf8e11c4dcf9771bc9"
 
+@app.route('/transcribe', methods=['POST'])
+def transcribe():
+    try:
+        # Get the audio file URL from the request
+        data = request.get_json()
+        audio_url = data.get('audio_url')
+        
+        if not audio_url:
+            return jsonify({"error": "Audio URL is required"}), 400
+
+        # Configuration for transcription
+        config = aai.TranscriptionConfig(speaker_labels=True,language_code='fr')
+        
+        # Transcribe the audio from the URL
+        transcriber = aai.Transcriber()
+        transcript = transcriber.transcribe(audio_url, config=config)
+        
+        # Format the response
+        result = {
+            "transcript": [
+                {"speaker": utterance.speaker, "text": utterance.text}
+                for utterance in transcript.utterances
+            ]
+        }
+        print(jsonify(result));
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+@app.route('/audio', methods=['POST'])
+def audio():
+    if 'audio_url' not in request.json:
+        return jsonify({'error': 'No audio_url provided'}), 400
+
+    audio_url = request.json['audio_url']
+
+    transcriber = aai.Transcriber()
+
+    try:
+        # Configure for French language transcription
+        config = aai.TranscriptionConfig(language_code="fr")
+        transcript = transcriber.transcribe(audio_url, config=config)
+        
+        # Polling for the transcription result
+        while transcript.status == aai.TranscriptStatus.processing:
+            transcript = transcriber.get_transcript(transcript.id)
+            
+        if transcript.status == aai.TranscriptStatus.error:
+            return jsonify({'error': transcript.error}), 500
+        
+        return jsonify({'text': transcript.text})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/highlight', methods=['POST'])
+def highlight():
+    if 'audio_url' not in request.json:
+        return jsonify({'error': 'No audio_url provided'}), 400
+
+    audio_url = request.json['audio_url']
+    try:
+        # Configure the transcription with auto_highlights
+        
+        config = aai.TranscriptionConfig(auto_highlights=True, language_code="fr")
+        transcriber = aai.Transcriber()
+        
+        # Start transcription
+        transcript = transcriber.transcribe(
+            audio_url,
+            config=config
+        )
+        
+        # Poll for completion
+        while transcript.status == 'queued' or transcript.status == 'processing':
+            transcript = transcriber.get_transcript(transcript.id)
+        
+        if transcript.status == 'failed':
+            return jsonify({'error': 'Transcription failed'}), 500
+
+        # Extract auto_highlight results
+        highlights = transcript.auto_highlights.results if transcript.auto_highlights else []
+        highlight_results = [{'text': result.text, 'count': result.count, 'rank': result.rank} for result in highlights]
+
+        return jsonify({
+            'text': transcript.text,
+            'highlights': highlight_results
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 # @app.route('/find_similar', methods=['POST'])
 # def find_similar():
 #     data = request.json
@@ -80,6 +177,14 @@ def home():
     
 #     return jsonify({'most_similar': most_similar})
 
+def make_fetch_request(url, headers, method='GET', data=None):
+    if method == 'POST':
+        response = requests.post(url, headers=headers, json=data)
+    else:
+        response = requests.get(url, headers=headers)
+    return response.json()
+
+ 
 
 @app.route('/api/v1/get_similarity', methods=['POST'])
 
