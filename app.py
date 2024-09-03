@@ -14,13 +14,8 @@ import assemblyai as aai
 
 app = Flask(__name__)
  
-CORS(app, resources={
-    r"/api/*": {
-        "origins": ["https://biborne-2024.onrender.com/api/v1/get_similarity",],
-        "methods": ["POST"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    }
-})
+CORS(app, resources={r"/api/*": {"origins": "*"}})
+
 
 
 # 
