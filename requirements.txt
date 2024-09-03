@@ -4,3 +4,4 @@ pandas
 gunicorn
 spacy
 assemblyai
+flask-cors

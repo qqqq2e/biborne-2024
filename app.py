@@ -4,6 +4,7 @@
 from sklearn.metrics.pairwise import cosine_similarity
 from flask import Flask, request, jsonify  
 # import spacy
+from flask_cors import CORS
 
  
 import pandas as pd
@@ -13,7 +14,14 @@ import assemblyai as aai
 
 app = Flask(__name__)
  
- 
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["https://biborne-2024.onrender.com/api/v1/get_similarity",],
+        "methods": ["POST"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
+
 
 # 
 data = pd.read_csv('./call_log_202406211525.csv')
